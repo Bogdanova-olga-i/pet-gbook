@@ -1,0 +1,5 @@
+mysql_host: '127.0.0.1:3306'
+mysql_user: 'pet'
+# Enter your password in field below
+mysql_password: 'gbook'
+mysql_db: 'db_pet_gbook'

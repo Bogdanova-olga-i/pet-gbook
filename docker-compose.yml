@@ -1,0 +1,47 @@
+version: "3"
+services:
+  mongo:
+    image: "mongo:latest"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - pet_network
+  growthbook:
+    image: "growthbook/growthbook:latest"
+    ports:
+      - "3000:3000"
+      - "3100:3100"
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://root:password@mongo:27017/growthbook?authSource=admin
+      - JWT_SECRET=eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJWZXJXZWIiLCJVc2VybmFtZSI6IlZlcldlYiIsImV4cCI6MTcyMzk4NDM1OSwiaWF0IjoxNjkyMzYxOTU5fQ.qpwiWPBapuF6JXM3ZR-UXZws4bWnRFGpKy6ElLGAvwQ
+    volumes:
+      - uploads:/usr/local/src/app/packages/back-end/uploads
+    networks:
+      - pet_network
+  mysql_db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=pqowieur
+      - MYSQL_DATABASE=db_pet_gbook
+      - MYSQL_USER=pet
+      - MYSQL_PASSWORD=gbook
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - pet_network
+volumes:
+  uploads:
+  mongodata:
+  mysql:
+networks:
+  pet_network:
+    driver: bridge
