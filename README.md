@@ -10,10 +10,20 @@
 3. Run app: python app.py
 
 
+
 ## What is wrong and what is my problem
 
 1. I make simple boolean feature «my-feature» and publish it
 2. And make Experiment with params:
+
+
+
+
+
+
+
+
+
 
    
   "id": "exp_4064501mlm0aa3x4",
