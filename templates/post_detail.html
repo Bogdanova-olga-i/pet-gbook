@@ -10,8 +10,8 @@
         <div class="alert alert-info">
             <p>{{ article.text }}</p>
             <p><b>Дата: {{ article.date.date() }}</b></p>
-            <a href="/posts/article/{{ article.id }}/del" class="btn btn-denger">Удалить</a>
-            <a href="/posts/article/{{ article.id }}/update" class="btn btn-success">Редактировать</a>
+            <a href="/posts/article/{{ article.id }}/del" class="btn btn-denger">Remove</a>
+            <a href="/posts/article/{{ article.id }}/update" class="btn btn-success">Update</a>
         </div>
     </div>
 {% endblock %}

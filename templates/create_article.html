@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Создание статьи
+Article ctreation
 {% endblock %}
 
 {% block body %}
     <div class="container">
-        <h1>Добавление статьи</h1>
+        <h1>Add article</h1>
         <form method="post">
-            <p>Представьтесь, кто вы?:</p>
+            <p>Introduce yourself, who are you?:</p>
             <input type="text" name="user" id="user" class="form-control"><br>
-            <input type="submit" class="btn btn-success" value="Отправить">
+            <input type="submit" class="btn btn-success" value="Send">
         </form>
     </div>
 {% endblock %}

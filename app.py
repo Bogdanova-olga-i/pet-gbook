@@ -21,86 +21,94 @@ app.config['SQLALCHEMY_DATABASE_URI'] = connection_str
 db = SQLAlchemy(app)
 
 
-# система сбора метрик
+# non-worked sistem for metrics collection
 def on_experiment_viewed(experiment = Experiment, result = Result):
     request_url = request.url
-    # получаем из url user_id
+    # get user_id from url
     try:
       user_id = request.url.split('user_id_')[1]
     except IndexError:
       user_id = 0
-    # загружаем название эксперимента
+    # download experiment name
     feature_key = experiment.key
-    # проверяем есть ли такой пользователь в эксперименте
+    # check the user in experiment
     no_user_in_experiment = db.session \
       .query(ExperimentData.user_id) \
       .filter_by(user_id=user_id) \
       .filter_by(feature_key=feature_key).first() is None
-    #  если пользователя нет, но в запросе его id есть:
+    #  if the user is not in the experiment, but we have user_id
     if no_user_in_experiment and user_id != 0:
         feature_value = result.key
-        # если пользователем совершено целевое действие и статус респонса 200
+        # if user do target action with response code 200
         if request_url.count('target_action/') and response.status_code == 200:
             target_action = 1
         else:
             target_action = 0
 
-        # создаем запись в таблице экспериментов
+        # make a record in experiment table
         experiment_record = ExperimentData(
             user_id=user_id,
             feature_key=feature_key,
             feature_value=feature_value,
             target_action=target_action
         )
-        # записываем в БД
+        # recording
         try:
             db.session.add(experiment_record)
             db.session.commit()
         except:
-            print ('Не удалось записать данные об эксперименте')
+            print ('Recording were unsuccesfull')
 
-    # если запись о пользователе есть в таблице экспериментальных данных
+    # if we have a user in experiment table
     elif no_user_in_experiment == False and user_id != 0:
-        # если данные о юзере есть в запросе:
-        if user_id !=0:
-            # смотрим значение целевого действия
-            target_action = db.session \
+        # find a value od target action column
+        target_action = db.session \
                 .query(ExperimentData.target_action) \
                 .filter_by(user_id=user_id) \
                 .filter_by(feature_key=feature_key).first()
 
-            if target_action == 0 and request_url.count('target_action/') > 0:
-                experiment_id = db.session \
+        # if user do target action
+        if target_action == 0 and request_url.count('target_action/') > 0:
+            experiment_id = db.session \
                     .query(ExperimentData.id) \
                     .filter_by(user_id=user_id) \
                     .filter_by(feature_key=feature_key).first()
-                experiment_record = ExperimentData.query.get(experiment_id)
-                experiment_record.target_action = 1
-                try:
-                    db.session.commit()
-                except:
-                    print("Не удалось обновить запись эксперимента")
+            experiment_record = ExperimentData.query.get(experiment_id)
+            experiment_record.target_action = 1
+            try:
+                db.session.commit()
+            except:
+                print("Не удалось обновить запись эксперимента")
     return 'Данные эксперимента успешно обработаны и записаны в БД'
 
 
-# делаем  middleware
+# middleware
 @app.before_request
 def start_middleware():
-    print ('\n Начало запроса \n')
-    request.gb = GrowthBook(
-        api_host="http://localhost:3100",
-        client_key="sdk-anpYqAnWvTuLSR"
-        )
+    print ('\n Request begin \n')
+
     try:
         user_id = request.url.split('user_id_')[1]
     except IndexError:
         user_id = 0
-    # отладка принтами
-    print (f'Experiment my-feture is on? : {request.gb.is_on("my-feature")}')
-    print (f'Request.url : {request.url}')
-    print (f'User_id: {user_id}')
+
+    attributes = {
+        "id": user_id,
+    }
+    print(f'User_id: {user_id}')
+
+    request.gb = GrowthBook(
+        attributes=attributes,
+        api_host="http://localhost:3100",
+        client_key="sdk-z96u5Xl8cjgg3mrJ",
+        on_experiment_viewed=on_experiment_viewed
+    )
+    print(f'Request.url : {request.url}')
+    # debug by prints
     request.gb.load_features()
 
+    print (f'Experiment my-feature is on? : {request.gb.is_on("my-feature")}')
+    print (f'Request.url : {request.url}')
 
 
 @app.after_request
@@ -149,7 +157,7 @@ def about():
 
 @app.route('/posts')
 def posts():
-    articles = Article.query.order_by(Article.date.desc()).all()
+    articles = Article.query.order_by(Article.date).all()
     return render_template("posts.html", articles=articles)
 
 @app.route('/posts/user_id_<int:id>')
@@ -173,7 +181,7 @@ def post_delete(art_id):
         db.session.commit()
         return redirect('/posts')
     except:
-        return "При удалении статьи произошла ошибка"
+        return "removing article was unsuccessful"
 
 @app.route('/posts/article/article_id_<int:art_id>/update', methods=['POST', 'GET'])
 def post_update(art_id):
@@ -188,7 +196,7 @@ def post_update(art_id):
             db.session.commit()
             return redirect('/posts')
         except:
-            return "При обновлении статьи произошла ошибка"
+            return "Updating was usuccessful"
 
     else:
         return render_template('post_update.html', article=article)
@@ -199,7 +207,7 @@ def create_article_make_author():
     if request.method == 'POST':
         author = request.form['user']
 
-        # проверка есть ли такой юзер
+        # check the user
         exists = db.session.query(User.id).filter_by(user=author).first() is None
 
         if exists:
@@ -219,9 +227,9 @@ def create_article_make_article(id):
     if request.method == 'POST':
         if request.gb.is_on("my-feature"):
             print("Feature is enabled!")
-            title = f'Control: Экспериментальный заголовок пользователья {id}'
-            intro = f'Control: Экспериментальная аннотация пользователья {id}'
-            text = f'Control: Экспериментальный текст пользователья {id}'
+            title = f'Test: Experiment title of user with user_id {id}'
+            intro = f'Test: Experiment abstract of user with user_id {id}'
+            text = f'Test: Experiment text of user with user_id {id}'
             user_id = id
 
         else:
