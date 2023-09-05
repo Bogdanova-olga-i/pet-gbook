@@ -8,6 +8,11 @@
    3) app.app_context().push()
    4) db.create_all()
 3. Run app: python app.py
+4. Connect GrowthBook container to MySQL:
+   - login, password, db name you can find in mysql_db.yaml
+   - host for connection you can find via docker:
+         - docker network inspect pet-gbook_pet_network
+         - find Getway IP - it is host
 
 
 
@@ -15,17 +20,7 @@
 
 1. I make simple boolean feature «my-feature» and publish it
 2. And make Experiment with params:
-
-
-
-
-
-
-
-
-
-
-   
+ 
   "id": "exp_4064501mlm0aa3x4",
   "trackingKey": "target_button",
   "organization": "org_4064501mlm09qaov",
