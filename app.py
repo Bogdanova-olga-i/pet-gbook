@@ -24,18 +24,24 @@ db = SQLAlchemy(app)
 # non-worked sistem for metrics collection
 def on_experiment_viewed(experiment = Experiment, result = Result):
     request_url = request.url
+
     # get user_id from url
     try:
       user_id = request.url.split('user_id_')[1]
     except IndexError:
       user_id = 0
+
     # download experiment name
     feature_key = experiment.key
+
     # check the user in experiment
     no_user_in_experiment = db.session \
       .query(ExperimentData.user_id) \
       .filter_by(user_id=user_id) \
       .filter_by(feature_key=feature_key).first() is None
+
+    print(f'NO user in table experiment_data? : {no_user_in_experiment}')
+
     #  if the user is not in the experiment, but we have user_id
     if no_user_in_experiment and user_id != 0:
         feature_value = result.key
@@ -65,7 +71,9 @@ def on_experiment_viewed(experiment = Experiment, result = Result):
         target_action = db.session \
                 .query(ExperimentData.target_action) \
                 .filter_by(user_id=user_id) \
-                .filter_by(feature_key=feature_key).first()
+                .filter_by(feature_key=feature_key).first()[0]
+
+        print (f'Now target action value is {target_action}')
 
         # if user do target action
         if target_action == 0 and request_url.count('target_action/') > 0:
@@ -75,6 +83,8 @@ def on_experiment_viewed(experiment = Experiment, result = Result):
                     .filter_by(feature_key=feature_key).first()
             experiment_record = ExperimentData.query.get(experiment_id)
             experiment_record.target_action = 1
+
+            print(f'Now we try to change target action value to 1')
             try:
                 db.session.commit()
             except:
@@ -95,7 +105,6 @@ def start_middleware():
     attributes = {
         "id": user_id,
     }
-    print(f'User_id: {user_id}')
 
     request.gb = GrowthBook(
         attributes=attributes,
@@ -103,12 +112,12 @@ def start_middleware():
         client_key="sdk-z96u5Xl8cjgg3mrJ",
         on_experiment_viewed=on_experiment_viewed
     )
-    print(f'Request.url : {request.url}')
+
     # debug by prints
     request.gb.load_features()
 
-    print (f'Experiment my-feature is on? : {request.gb.is_on("my-feature")}')
-    print (f'Request.url : {request.url}')
+    print(f'User_id: {user_id}')
+    print (f'Experiment my-feture is on? : {request.gb.is_on("my-feture")}')
 
 
 @app.after_request
@@ -225,7 +234,7 @@ def create_article_make_author():
 @app.route('/create_article2/user_id_<int:id>', methods=['POST', 'GET'])
 def create_article_make_article(id):
     if request.method == 'POST':
-        if request.gb.is_on("my-feature"):
+        if request.gb.is_on("my-feture"):
             print("Feature is enabled!")
             title = f'Test: Experiment title of user with user_id {id}'
             intro = f'Test: Experiment abstract of user with user_id {id}'
