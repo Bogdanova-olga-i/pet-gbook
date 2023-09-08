@@ -89,7 +89,7 @@ def on_experiment_viewed(experiment = Experiment, result = Result):
                 db.session.commit()
             except:
                 print("Не удалось обновить запись эксперимента")
-    return 'Данные эксперимента успешно обработаны и записаны в БД'
+    return print('Данные эксперимента успешно обработаны и записаны в БД')
 
 
 # middleware
